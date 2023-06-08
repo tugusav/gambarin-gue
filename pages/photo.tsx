@@ -1,4 +1,4 @@
-// import { withAuthenticator } from "@aws-amplify/ui-react";
+import { withAuthenticator } from "@aws-amplify/ui-react";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import Image from "next/image";
@@ -19,16 +19,16 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
     setCapturedImage(null);
   };
 
-//   const submitPhoto = async () => {
-//     try {
-//       const response = await axios.post("your-api-endpoint", {
-//         image: capturedImage,
-//       });
-//       console.log(response.data); // Do something with the API response
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
+  // const submitPhoto = async () => {
+  //   try {
+  //     const response = await axios.post("your-api-endpoint", {
+  //       image: capturedImage,
+  //     });
+  //     console.log(response.data); // Do something with the API response
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   return (
     <div>
@@ -61,5 +61,5 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
     </div>
   );
 };
-// export default withAuthenticator(WebcamPage);
-export default WebcamPage;
+export default withAuthenticator(WebcamPage);
+// export default WebcamPage;
