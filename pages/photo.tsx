@@ -1,4 +1,4 @@
-import { withAuthenticator } from "@aws-amplify/ui-react";
+// import { withAuthenticator } from "@aws-amplify/ui-react";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import Image from "next/image";
@@ -10,7 +10,9 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
 
   const capturePhoto = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
-    setCapturedImage(imageSrc);
+    if (imageSrc) {
+      setCapturedImage(imageSrc);
+    }
   };
 
   const retakePhoto = () => {
@@ -59,4 +61,5 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
     </div>
   );
 };
-export default withAuthenticator(WebcamPage);
+// export default withAuthenticator(WebcamPage);
+export default WebcamPage;

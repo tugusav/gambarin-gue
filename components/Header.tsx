@@ -26,7 +26,6 @@ function Header() {
 
       {/* right */}
       <div className="flex text-xs md:text-base divide-x items-center text-gray-500">
-        {/* <button type='button' className="px-4 font-bold text-right">My Images</button> */}
         <Link href="/my-images" className="px-2 font-bold text-right">
           My Images
         </Link>
@@ -36,11 +35,9 @@ function Header() {
         >
           Github Repo
         </Link>
-        <div className="px-5">
           <Link href="/profile"
            className="px-2 font-bold text-right"
           >Profile</Link>
-        </div>
       </div>
     </header>
   );

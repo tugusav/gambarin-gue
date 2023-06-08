@@ -15,11 +15,9 @@ function Profile({}: any) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
-        { user && <h1 className="p-4 text-3xl font-bold underline">Hello, {user.attributes.name}!</h1> }
+        { user && <h1 className="p-4 text-3xl font-bold">Hello, {user.attributes.email}!</h1> }
         <button onClick={() => Auth.signOut()}
-        className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-        
-        >Sign Out</button>
+        className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">Sign Out</button>
     </div>
   );
 }
