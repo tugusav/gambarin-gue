@@ -4,7 +4,7 @@ import Layout from '@/components/Layout'
 import GalleryLayout from '@/components/GalleryLayout'
 import { Amplify } from 'aws-amplify';
 import "@aws-amplify/ui-react/styles.css";
-import awsExports from './aws-exports'
+import awsExports from '@/src/aws-exports'
 
 Amplify.configure({...awsExports, ssr: true})
 
