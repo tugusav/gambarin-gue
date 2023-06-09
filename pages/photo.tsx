@@ -33,7 +33,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   return (
     <div>
       {capturedImage ? (
-        <div className="flex flex-col space-y-5 items-center justify-center py-10">
+        <div className="flex flex-col space-y-5 h-screen items-center justify-center">
           <Image
             src={capturedImage}
             alt="Captured"
@@ -41,17 +41,17 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
             width={640}
             height={640}
           />
-          <div className="flex flex-row space-x-5 items-center justify-center">
-          <button className="bg-white text-orange-500 hover:bg-gray-100 hover:text-orange-700  text-2xl font-bold py-10 px-40 rounded-3xl" onClick={retakePhoto}>Retake</button>
-          <button className="bg-orange-500 hover:bg-orange-700 text-white text-2xl font-bold py-10 px-40 rounded-3xl shadow-md">Submit</button>
+          <div className="flex sm:flex-col lg:flex-row items-center justify-center">
+            <button className="bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl" onClick={retakePhoto}>Retake</button>
+            <button className="bg-orange-500 hover:bg-orange-700 text-white text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl shadow-md">Submit</button>
           </div>
         </div>
       ) : (
-        // make webcam in the middle of screen
-        <div className="flex flex-col space-y-5 items-center justify-center py-10">
+        // make div in the middle of screen horizontally and vertically
+        <div className="flex flex-col space-y-5 h-screen items-center justify-center py-10 ">
           <Webcam audio={false} mirrored={true} ref={webcamRef} width={640} height={640} />
           <button
-            className="bg-orange-500 hover:bg-orange-700 text-white text-2xl font-bold py-10 px-40 rounded-3xl"
+            className="bg-orange-500 hover:bg-orange-700 text-white text-2xl font-bold py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
             onClick={capturePhoto}
           >
             Capture
