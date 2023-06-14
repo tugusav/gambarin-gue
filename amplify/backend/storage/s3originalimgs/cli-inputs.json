@@ -1,0 +1,13 @@
+{
+  "resourceName": "s3originalimgs",
+  "policyUUID": "16360260",
+  "bucketName": "gambaringue-images",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {}
+}

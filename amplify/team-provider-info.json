@@ -1,4 +1,29 @@
 {
+  "main": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-gambaringue-main-160132-authRole",
+      "UnauthRoleArn": "arn:aws:iam::506978031146:role/amplify-gambaringue-main-160132-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::506978031146:role/amplify-gambaringue-main-160132-authRole",
+      "Region": "ap-southeast-1",
+      "DeploymentBucketName": "amplify-gambaringue-main-160132-deployment",
+      "UnauthRoleName": "amplify-gambaringue-main-160132-unauthRole",
+      "StackName": "amplify-gambaringue-main-160132",
+      "StackId": "arn:aws:cloudformation:ap-southeast-1:506978031146:stack/amplify-gambaringue-main-160132/bccc75a0-0615-11ee-817d-0a07753823d4",
+      "AmplifyAppId": "d26ql04l85p1xo"
+    },
+    "categories": {
+      "storage": {
+        "gambaringuef5c7ae4a": {
+          "bucketName": "gambarin-gue-images",
+          "region": "ap-southeast-1"
+        },
+        "s3originalimgs": {}
+      },
+      "auth": {
+        "gambaringue": {}
+      }
+    }
+  },
   "staging": {
     "awscloudformation": {
       "AuthRoleName": "amplify-amplify8e22e5c229554-staging-134915-authRole",

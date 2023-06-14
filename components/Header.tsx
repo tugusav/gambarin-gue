@@ -14,12 +14,7 @@ export default function Header() {
       {/* left */}
       <div className="flex space-x-2 items-center">
         <Link href="/">
-          <Image
-            src="/pencil.png"
-            alt="logo"
-            width={50}
-            height={50}
-          />
+          <Image src="/pencil.png" alt="logo" width={50} height={50} />
         </Link>
 
         <div>
@@ -27,9 +22,9 @@ export default function Header() {
             <h1 className="sm:text-xl lg:text-2xl text-black font-bold">
               Gambar<span className="text-orange-500">.in</span> Gue!
             </h1>
-          <h2 className="text-black text-xs lg:text-sm font-light mt-1s">
-            Powered by AWS SageMaker and StableDiffusion 2.1
-          </h2>
+            <h2 className="text-black text-xs lg:text-sm font-light mt-1s">
+              Powered by AWS SageMaker and StableDiffusion 2.1
+            </h2>
           </Link>
         </div>
       </div>
@@ -37,7 +32,13 @@ export default function Header() {
       {/* right */}
       <div className="hidden md:flex text-xs md:text-base divide-x items-center text-gray-500">
         <div className="flex items-center">
-          <Link href="/my-images" className="px-2 lg:px-4 font-bold text-center">
+          <Link href="/photo" className="px-2 lg:px-4 font-bold text-center text-orange-500">
+            Take Photo
+          </Link>
+          <Link
+            href="/my-images"
+            className="px-2 lg:px-4 font-bold text-center"
+          >
             My Images
           </Link>
           <Link
@@ -47,13 +48,8 @@ export default function Header() {
             Github
           </Link>
           <Link href="/profile" className="px-2 lg:px-4 font-bold">
-          <Image
-            src="/user.png"
-            alt="profile"
-            width={40}
-            height={40}
-          />
-        </Link>
+            <Image src="/user.png" alt="profile" width={40} height={40} />
+          </Link>
         </div>
       </div>
 
@@ -81,18 +77,27 @@ export default function Header() {
         {menuOpen && (
           <div className="absolute top-14 right-3 mt-2 bg-white rounded shadow-md">
             <Link
+              href="/photo"
+              className="block px-4 py-2 font-bold text-center text-gray-500"
+            >
+              Take Photo
+            </Link>
+            <Link
               href="/my-images"
-              className="block px-4 py-2 font-bold text-center"
+              className="block px-4 py-2 font-bold text-center text-gray-500"
             >
               My Images
             </Link>
             <Link
               href="https://github.com/tugusav/gambarin-gue"
-              className="block px-4 py-2 font-bold text-center"
+              className="block px-4 py-2 font-bold text-center text-gray-500"
             >
               Github
             </Link>
-            <Link href="/profile" className="block px-4 py-2 font-bold text-center">
+            <Link
+              href="/profile"
+              className="block px-4 py-2 font-bold text-center text-gray-500"
+            >
               Profile
             </Link>
           </div>
