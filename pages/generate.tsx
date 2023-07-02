@@ -1,8 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Auth, Storage } from "aws-amplify";
 import LoadingScreen from "@/components/Loading";
 import GeneratedImage from "@/components/GeneratedImage";
+import Link from "next/link";
+
 
 function Generate() {
   const router = useRouter();
@@ -101,7 +104,7 @@ function Generate() {
     if (loading) {
       generateImage();
     }
-  });
+  },[loading]);
 
   return (
     <>
@@ -109,17 +112,24 @@ function Generate() {
         <LoadingScreen />
       ) : (
         <>
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-2xl lg:text-4xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl">Your Generated Image</h1>
+        <div className="flex flex-col items-center h-screen space-y-4 justify-center">
         <GeneratedImage image={image} imgUrl={url} />
-          <button
+        <div className="flex flex-col lg:flex-row items-center justify-center ">
+        <button
             className="items-center justify-center bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
             onClick={handleRegenerate}
           >
             Regenerate
           </button>
+          <Link
+          href="/my-images"
+          className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+        >
+          All Images
+          </Link>
         </div>
           
+        </div>   
         </>
       )}
     </>
