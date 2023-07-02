@@ -32,9 +32,17 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   const submitPhoto = async () => {
     try {
       setLoading(true);
-      uploadImageToS3(capturedImage!);
+      const img_key = await uploadImageToS3(capturedImage!);
+      console.log("S3 Image Key: ", img_key);
       setLoading(false);
-      router.push("/generate");
+      // router.push(`/generate?key=${img_key}`);
+      router.push(
+        {
+          pathname: "/generate",
+          query: { key: img_key },
+        },
+        "/generate"
+      );
     } catch (error) {
       console.log(error);
       setLoading(false);
@@ -55,7 +63,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   return (
     <div>
       {loading ? (
-        <div>Loading...</div>
+        <h1 className="text-center text-2xl">Loading...</h1>
       ) : capturedImage ? (
         <div className="flex flex-col space-y-5 h-screen items-center justify-center">
           <Image

@@ -10,4 +10,3 @@ function MyImages() {
   );
 }
 export default MyImages;
-// export default MyImages;

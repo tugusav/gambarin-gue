@@ -23,7 +23,7 @@ export default function Header() {
               Gambar<span className="text-orange-500">.in</span> Gue!
             </h1>
             <h2 className="text-black text-xs lg:text-sm font-light mt-1s">
-              Powered by AWS SageMaker and StableDiffusion 2.1
+              Powered by AWS and StableDiffusion 2.1
             </h2>
           </Link>
         </div>
