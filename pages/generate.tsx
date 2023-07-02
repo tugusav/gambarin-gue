@@ -112,7 +112,7 @@ function Generate() {
         <LoadingScreen />
       ) : (
         <>
-        <div className="flex flex-col items-center h-screen space-y-4 justify-center">
+        <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
         <GeneratedImage image={image} imgUrl={url} />
         <div className="flex flex-col lg:flex-row items-center justify-center ">
         <button
