@@ -101,7 +101,7 @@ function Generate() {
     if (loading) {
       generateImage();
     }
-  }, [loading]);
+  });
 
   return (
     <>
