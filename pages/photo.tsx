@@ -15,9 +15,11 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   const [loading, setLoading] = useState(false);
 
   const capturePhoto = () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+    const data = webcamRef.current?.getScreenshot();
+    // convert the imageSrc to base64
+    const imageSrc = data?.toString().replace(/^data:image\/webp;base64,/, "data:image/jpg;base64,");
     if (imageSrc) {
-      const extension = "jpg"; // Change this to the desired image file extension
+      const extension = "jpeg"; // Change this to the desired image file extension
       const fileName = `captured-image-${Date.now()}.${extension}`;
       const blob = dataURLtoBlob(imageSrc);
       const file = new File([blob], fileName, { type: `image/${extension}` });
@@ -50,15 +52,15 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   };
 
   const dataURLtoBlob = (dataURL: string): Blob => {
-    const byteString = atob(dataURL.split(",")[1]);
-    const mimeString = dataURL.split(",")[0].split(":")[1].split(";")[0];
+    const byteString = Buffer.from(dataURL.split(",")[1], 'base64').toString('binary');
+    const mimeString = "image/jpeg"; // Specify JPEG MIME type    
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
     return new Blob([ab], { type: mimeString });
-  };
+};
 
   return (
     <div>
@@ -94,6 +96,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
             audio={false}
             mirrored={true}
             ref={webcamRef}
+            screenshotFormat="image/jpeg"
             width={640}
             height={640}
           />
