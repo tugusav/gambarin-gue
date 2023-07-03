@@ -17,7 +17,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   const capturePhoto = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      const extension = "jpeg"; // Change this to the desired image file extension
+      const extension = "jpg"; // Change this to the desired image file extension
       const fileName = `captured-image-${Date.now()}.${extension}`;
       const blob = dataURLtoBlob(imageSrc);
       const file = new File([blob], fileName, { type: `image/${extension}` });
