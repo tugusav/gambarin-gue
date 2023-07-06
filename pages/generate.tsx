@@ -5,7 +5,7 @@ import { Auth, Storage } from "aws-amplify";
 import LoadingScreen from "@/components/Loading";
 import GeneratedImage from "@/components/GeneratedImage";
 import Link from "next/link";
-import rekogClient from "./helpers/rekognition";
+import rekogClient from "../helpers/rekognition";
 import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
 
 async function fetchWithTimeout(resource: RequestInfo, options: { timeout?: number, headers?: HeadersInit, method?: string, body?: string } = {}): Promise<Response> {
