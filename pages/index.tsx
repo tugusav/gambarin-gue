@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 export default function Home() {
   return (
     <>
-      <div className="p-10 flex flex-col space-y-10 items-center justify-center min-h-screen py-2 h-screen">
+      <div className="min-h-screen p-10 flex flex-col space-y-10 items-center justify-center py-2">
         <h1 className="text-4xl lg:text-6xl font-bold text-center">
           Welcome to Gambar<span className="text-orange-500">in</span> Gue!{" "}
         </h1>

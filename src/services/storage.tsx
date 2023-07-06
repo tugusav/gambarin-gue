@@ -24,27 +24,3 @@ export const uploadImageToS3 = async (image: Blob) => {
     return null
   }
 };
-
-// export const uploadImageToS3 =  async (image: Blob) => {
-//   try {
-//     const user = await Auth.currentAuthenticatedUser();
-//     const { username } = user['username'];
-//     const key = `${username}/${image.name}`;
-
-//     const s3 = new AWS.S3();
-
-//     const params = {
-//       Bucket: 'gambaringue-user-images',
-//       Key: key,
-//       Body: image,
-//       ContentType: image.type, // Set the content type of the file
-//     };
-
-//     await s3.upload(params).promise();
-
-//     console.log('Image uploaded successfully', key);
-//     return key;
-//   } catch (error) {
-//     console.error('Error uploading image:', error);
-//   }
-// }

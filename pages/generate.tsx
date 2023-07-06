@@ -5,6 +5,23 @@ import { Auth, Storage } from "aws-amplify";
 import LoadingScreen from "@/components/Loading";
 import GeneratedImage from "@/components/GeneratedImage";
 import Link from "next/link";
+import rekogClient from "./helpers/rekognition";
+import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
+
+async function fetchWithTimeout(resource: RequestInfo, options: { timeout?: number, headers?: HeadersInit, method?: string, body?: string } = {}): Promise<Response> {
+  const { timeout = 30000 } = options;
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+
+  return response;
+}
 
 
 function Generate() {
@@ -14,22 +31,33 @@ function Generate() {
   const [image, setImage] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     // Get the image key from the router query when the component mounts
     const { key } = router.query;
     setImageKey(key as string);
-    setLoading(true)
+    setLoading(true);
   }, [router.query]);
 
-  const generateImage = async () => {
+  // Set params
+  const rekognitionParams = {
+    Attributes: ['ALL'],
+    Image: {
+      S3Object: {
+        Bucket: "gambaringue-user-images",
+        Name: `public/${key}`
+      },
+    },
+  };
+  const generateImage = async (rekognitionPrompt: string) => {
     try {
       const user = await Auth.currentAuthenticatedUser();
       const token = user.signInUserSession.idToken.jwtToken;
 
       const requestHeader = {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `${token}`,
       };
 
       const requestBody = {
@@ -45,24 +73,24 @@ function Generate() {
         },
         username: user["username"],
         parameters: {
-          prompt: "caricature style, drawing, realistic, funny",
+          prompt: rekognitionPrompt,
           num_inference_steps: 90,
           guidance_scale: 7.5,
           num_images_per_prompt: 1,
-          negative_prompt: "ugly, not safe for work, bad anatomy",
+          negative_prompt: "ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face",
           batch_size: 2,
           strength: 0.7,
           scheduler: "KDPM2AncestralDiscreteScheduler",
         },
       };
       console.log("calling API");
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         "https://pnn37l8e40.execute-api.us-east-1.amazonaws.com/dev/generate",
         {
           method: "POST",
           headers: requestHeader,
           body: JSON.stringify(requestBody),
-        }
+        },
       );
       // Handle the response
       if (response.ok) {
@@ -79,57 +107,135 @@ function Generate() {
         });
         setImage(s3Image);
         setUrl(img_url);
+        setLoading(false);
+        setSuccess(true); 
       } else {
         console.error("API request failed with status:", response.status);
+        setLoading(false);
+        setSuccess(false);
       }
     } catch (error) {
       console.error("API request failed with error:", error);
-    }
-    setLoading(false);
+      setLoading(false);
+      setSuccess(false);
+    }   
+    
   };
+
+  const detect_face_and_generate = async () => {
+    try {
+      console.log(key);
+      const response = await rekogClient.send(
+        new DetectFacesCommand(rekognitionParams)
+      )
+      console.log("Detecting face");
+      if (response && response.FaceDetails !== undefined && response.FaceDetails.length > 0) {
+        console.log(response)
+        // Accessing specific attributes
+        const faceDetails = response.FaceDetails[0];
+        const ageRange = faceDetails.AgeRange;
+        const beard = faceDetails.Beard;
+        const emotions = faceDetails.Emotions;
+        const eyeglasses = faceDetails.Eyeglasses;
+        const gender = faceDetails.Gender;
+        const mustache = faceDetails.Mustache;
+        const mouthOpen = faceDetails.MouthOpen;
+        const smile = faceDetails.Smile;
+        const sunglasses = faceDetails.Sunglasses;
+
+        // Calculate the mean of the age range
+        const age = (ageRange?.Low)
+
+        const hasBeard = beard?.Value ? 'beard' : 'no beard'
+        // Find the first value of emotion
+        const dominantEmotion = emotions?.[0].Type?.toLowerCase();
+
+        // Determine if the person wears eyeglasses
+        const wearsEyeglasses = eyeglasses?.Value ? 'eyeglassess' : 'no eyeglasses';
+
+        // Get the gender of the person
+        const personGender = gender?.Value;
+
+        // Determine if the person is smiling
+        const isSmiling = smile?.Value ? 'smiling' : 'not smiling';
+        
+        // Determine if the person has their mouth open
+        const hasMouthOpen = mouthOpen?.Value ? 'mouth open' : 'mouth closed';
+
+        // Determine if the person uses sunglasses
+        const usesSunglasses = sunglasses?.Value ? 'using sunglasses' : 'not using sunglasses';
+
+        const hasMustache = mustache?.Value ? 'has mustache' : 'no mustache';
+
+        // Generate the prompt
+        const rekognitionPrompt = `caricature style, drawing, high resolution, funny, ultra realistic, background with ${dominantEmotion} emotion theme, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`
+        
+        // call generate function
+        console.log(`Generating image with prompt: ${rekognitionPrompt}`)
+        generateImage(rekognitionPrompt);
+      } else {
+        console.log("No face detected");
+        // handle case when face not detected
+
+      }
+    } catch (err) {
+      console.log("Error", err);
+    }
+  };
+
 
   const handleRegenerate = async () => {
     setLoading(true);
-    // Delete the previously generated image
-    if (generatedKey) {
-      await Storage.remove(generatedKey, {
-        bucket: "gambaringue-generated-images",
-      });
-    }
-    generateImage();
+    setSuccess(false);
+    setImage("");
+    setUrl("");
+    setGeneratedKey("");
   };
 
   // Call generateImage when loading
   useEffect(() => {
-    if (loading) {
-      generateImage();
+    if (loading && !success) {
+      detect_face_and_generate();
     }
-  },[loading]);
+  }, [loading, success]);
 
   return (
     <>
-      {loading ? (
+      {loading && !success ? (
         <LoadingScreen />
       ) : (
         <>
+        {success ? (
         <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
-        <GeneratedImage image={image} imgUrl={url} />
-        <div className="flex flex-col lg:flex-row items-center justify-center ">
-        <button
-            className="items-center justify-center bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-            onClick={handleRegenerate}
-          >
-            Regenerate
-          </button>
-          <Link
-          href="/my-images"
-          className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-        >
-          All Images
-          </Link>
-        </div>
+            <GeneratedImage image={image} imgUrl={url} />
+            <div className="flex flex-col lg:flex-row items-center justify-center ">
+              <button
+                className="items-center justify-center bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+                onClick={handleRegenerate}
+              >
+                Regenerate
+              </button>
+              <Link
+                href="/photo"
+                className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+              >
+                Retake Photo
+              </Link>
+            </div>
+          </div>) : (
+            <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
+            <h1 className="text-2xl font-bold text-center">Failed to generate image</h1>
+            {/* show retake photo button */}
+            <Link
+                href="/photo"
+                className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+              >
+                Retake Photo
+              </Link>
+
+            </div>
+          )}
           
-        </div>   
         </>
       )}
     </>

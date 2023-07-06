@@ -65,7 +65,11 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   return (
     <div>
       {loading ? (
-        <h1 className="text-center text-2xl">Loading...</h1>
+        <div className="min-h-screen flex flex-col items-center justify-center py-2">
+        <h1 className="text-4xl lg:6xl font-bold text-center">
+          Loading
+        </h1>
+        </div>
       ) : capturedImage ? (
         <div className="flex flex-col space-y-5 h-screen items-center justify-center">
           <Image
