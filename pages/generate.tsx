@@ -85,7 +85,7 @@ function Generate() {
           scheduler: "KDPM2AncestralDiscreteScheduler",
         },
       };
-      console.log("calling API");
+      console.log("Fetching image...");
       const response = await fetchWithTimeout(
         "https://pnn37l8e40.execute-api.us-east-1.amazonaws.com/dev/generate",
         {
@@ -130,7 +130,7 @@ function Generate() {
       const response = await rekogClient.send(
         new DetectFacesCommand(rekognitionParams)
       )
-      console.log("Detecting face");
+      console.log("Detecting face...");
       if (response && response.FaceDetails !== undefined && response.FaceDetails.length > 0) {
         console.log(response)
         // Accessing specific attributes
@@ -175,7 +175,7 @@ function Generate() {
         const rekognitionPrompt = `caricature style, drawing, high resolution, funny, ultra realistic, background of ${background}, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`
         
         // call generate function
-        console.log(`Generating image with prompt: ${rekognitionPrompt}`)
+        // console.log(`Generating image with prompt: ${rekognitionPrompt}`)
         generateImage(rekognitionPrompt);
       } else {
         console.log("No face detected");

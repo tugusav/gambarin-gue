@@ -16,7 +16,7 @@ export const uploadImageToS3 = async (image: Blob) => {
       level: "public",
       contentType: "image/jpeg",
     });
-    console.log(return_val);
+    // console.log(return_val);
     console.log("Image uploaded successfully");
     return key;
   } catch (error) {

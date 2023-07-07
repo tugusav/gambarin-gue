@@ -11,11 +11,11 @@ export default function ImageGallery() {
   const fetchImages = async () => {
     const user = await Auth.currentAuthenticatedUser();
     const key = `${user["username"]}/`;
-    console.log(key);
+    // console.log(key);
     const { results } = await Storage.list(key, {
       bucket: "gambaringue-generated-images",
     });
-    console.log(results);
+    // console.log(results);
     setImageKeys(results);
     const s3Images = await Promise.all(
       results.slice(0).reverse().map(
