@@ -6,6 +6,7 @@ import { Auth } from "aws-amplify";
 type WebcamPageProps = {};
 import { uploadImageToS3 } from "@/src/services/storage";
 import Router, { useRouter } from "next/router";
+import Head from "next/head";
 
 const WebcamPage: React.FC<WebcamPageProps> = () => {
   const router = useRouter();
@@ -17,7 +18,9 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   const capturePhoto = () => {
     const data = webcamRef.current?.getScreenshot();
     // convert the imageSrc to base64
-    const imageSrc = data?.toString().replace(/^data:image\/webp;base64,/, "data:image/jpg;base64,");
+    const imageSrc = data
+      ?.toString()
+      .replace(/^data:image\/webp;base64,/, "data:image/jpg;base64,");
     if (imageSrc) {
       const extension = "jpeg"; // Change this to the desired image file extension
       const fileName = `captured-image-${Date.now()}.${extension}`;
@@ -52,67 +55,72 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   };
 
   const dataURLtoBlob = (dataURL: string): Blob => {
-    const byteString = Buffer.from(dataURL.split(",")[1], 'base64').toString('binary');
-    const mimeString = "image/jpeg"; // Specify JPEG MIME type    
+    const byteString = Buffer.from(dataURL.split(",")[1], "base64").toString(
+      "binary"
+    );
+    const mimeString = "image/jpeg"; // Specify JPEG MIME type
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
     return new Blob([ab], { type: mimeString });
-};
+  };
 
   return (
-    <div>
-      {loading ? (
-        <div className="min-h-screen flex flex-col items-center justify-center py-2">
-        <h1 className="text-4xl lg:6xl font-bold text-center">
-          Loading
-        </h1>
-        </div>
-      ) : capturedImage ? (
-        <div className="flex flex-col space-y-5 h-screen items-center justify-center">
-          <Image
-            src={URL.createObjectURL(capturedImage)}
-            alt="Captured"
-            className="rounded-xl"
-            width={640}
-            height={640}
-          />
-          <div className="flex sm:flex-col lg:flex-row items-center justify-center">
+    <>
+      <Head>
+        <title>Take Photo</title>
+      </Head>
+      <div>
+        {loading ? (
+          <div className="min-h-screen flex flex-col items-center justify-center py-2">
+            <h1 className="text-4xl lg:6xl font-bold text-center">Uploading Photo...</h1>
+          </div>
+        ) : capturedImage ? (
+          <div className="flex flex-col space-y-5 h-screen items-center justify-center">
+            <Image
+              src={URL.createObjectURL(capturedImage)}
+              alt="Captured"
+              className="rounded-xl"
+              width={640}
+              height={640}
+            />
+            <div className="flex sm:flex-col lg:flex-row items-center justify-center">
+              <button
+                className="bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+                onClick={retakePhoto}
+              >
+                Retake
+              </button>
+              <button
+                className="bg-orange-500 hover:bg-orange-700 text-white text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl shadow-md"
+                onClick={submitPhoto}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-5 min-h-screen items-center justify-center py-10 ">
+            <Webcam
+              audio={false}
+              mirrored={true}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              width={640}
+              height={640}
+            />
             <button
-              className="bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-              onClick={retakePhoto}
+              className="bg-orange-500 hover:bg-orange-700 text-white text-2xl font-bold py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+              onClick={capturePhoto}
             >
-              Retake
-            </button>
-            <button
-              className="bg-orange-500 hover:bg-orange-700 text-white text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl shadow-md"
-              onClick={submitPhoto}
-            >
-              Submit
+              Capture
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-5 h-screen items-center justify-center py-10 ">
-          <Webcam
-            audio={false}
-            mirrored={true}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            width={640}
-            height={640}
-          />
-          <button
-            className="bg-orange-500 hover:bg-orange-700 text-white text-2xl font-bold py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-            onClick={capturePhoto}
-          >
-            Capture
-          </button>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };
 export default withAuthenticator(WebcamPage);

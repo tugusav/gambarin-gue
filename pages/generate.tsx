@@ -7,6 +7,8 @@ import GeneratedImage from "@/components/GeneratedImage";
 import Link from "next/link";
 import rekogClient from "../helpers/rekognition";
 import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
+import Head from "next/head";
+import { setBackground } from "@/helpers/variable_mapper";
 
 async function fetchWithTimeout(resource: RequestInfo, options: { timeout?: number, headers?: HeadersInit, method?: string, body?: string } = {}): Promise<Response> {
   const { timeout = 30000 } = options;
@@ -144,11 +146,13 @@ function Generate() {
         const sunglasses = faceDetails.Sunglasses;
 
         // Calculate the mean of the age range
-        const age = (ageRange?.Low)
-
+        const age = ageRange?.High;
         const hasBeard = beard?.Value ? 'beard' : 'no beard'
         // Find the first value of emotion
         const dominantEmotion = emotions?.[0].Type?.toLowerCase();
+        // randomizer for every type of emotions (array)
+        // array define sendiri
+        const background = setBackground(dominantEmotion);
 
         // Determine if the person wears eyeglasses
         const wearsEyeglasses = eyeglasses?.Value ? 'eyeglassess' : 'no eyeglasses';
@@ -168,15 +172,15 @@ function Generate() {
         const hasMustache = mustache?.Value ? 'has mustache' : 'no mustache';
 
         // Generate the prompt
-        const rekognitionPrompt = `caricature style, drawing, high resolution, funny, ultra realistic, background with ${dominantEmotion} emotion theme, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`
+        const rekognitionPrompt = `caricature style, drawing, high resolution, funny, ultra realistic, background of ${background}, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`
         
         // call generate function
         console.log(`Generating image with prompt: ${rekognitionPrompt}`)
         generateImage(rekognitionPrompt);
       } else {
         console.log("No face detected");
+        generateImage("make a crazy image out of this")
         // handle case when face not detected
-
       }
     } catch (err) {
       console.log("Error", err);
@@ -201,12 +205,15 @@ function Generate() {
 
   return (
     <>
+    <Head>
+      <title>Generate Image</title>
+    </Head>
       {loading && !success ? (
         <LoadingScreen />
       ) : (
         <>
         {success ? (
-        <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
+        <div className="flex flex-col items-center w-full min-h-screen justify-center space-y-10 p-4">
             <GeneratedImage image={image} imgUrl={url} />
             <div className="flex flex-col lg:flex-row items-center justify-center ">
               <button
@@ -216,11 +223,18 @@ function Generate() {
                 Regenerate
               </button>
               <Link
-                href="/photo"
+                href={url}
                 className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+              >
+                Download
+              </Link>
+              <Link
+                href="/photo"
+                className="items-center justify-center bg-black text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
               >
                 Retake Photo
               </Link>
+              
             </div>
           </div>) : (
             <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
@@ -230,7 +244,7 @@ function Generate() {
                 href="/photo"
                 className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
               >
-                Retake Photo
+                Retake
               </Link>
 
             </div>

@@ -5,9 +5,10 @@ import React from "react";
 function Footer() {
   return (
     // create footer that contains author
-    <footer className="bg-gray-200 text-black-500">
-      <div className="flex flex-col space-y-2 p-3">
-        <h1 className="text-l text-center font-bold">2023 © Tugus Avanindra - v1.0.0</h1>
+    <footer className="bg-gray-200">
+      <div className="flex flex-col space-y-1 p-2">
+        <h1 className="text-l text-center text-gray-500 font-bold">2023 © Gambar.in Gue v1.1.0</h1>
+        <h1 className="text-l text-center text-gray-500">Created by Tugus</h1>
         {/* include social media */}
         <div className="flex space-x-3 justify-center">
           <Link
