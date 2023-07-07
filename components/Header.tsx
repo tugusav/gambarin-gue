@@ -30,20 +30,20 @@ export default function Header() {
       </div>
 
       {/* right */}
-      <div className="hidden md:flex text-xs md:text-base divide-x items-center text-gray-500">
+      <div className="hidden md:flex text-xl sm:text-l divide-x items-center text-gray-500">
         <div className="flex items-center">
-          <Link href="/photo" className="px-2 lg:px-4 font-bold text-center text-orange-500">
+          <Link href="/photo" className="px-2 lg:px-4 font-bold text-center text-orange-500 hover:bg-gray-200 rounded-lg p-4">
             Take Photo
           </Link>
           <Link
             href="/my-images"
-            className="px-2 lg:px-4 font-bold text-center"
+            className="px-2 lg:px-4 font-bold text-center hover:bg-gray-200 rounded-lg p-4"
           >
             My Images
           </Link>
           <Link
             href="https://github.com/tugusav/gambarin-gue"
-            className="px-2 lg:px-4 font-bold text-right"
+            className="px-2 lg:px-4 font-bold text-right hover:bg-gray-200 rounded-lg p-4"
           >
             Github
           </Link>
@@ -78,7 +78,7 @@ export default function Header() {
           <div className="absolute top-14 right-3 mt-2 bg-white rounded shadow-md">
             <Link
               href="/photo"
-              className="block px-4 py-2 font-bold text-center text-gray-500"
+              className="block px-4 py-2 font-bold text-center text-orange-500"
             >
               Take Photo
             </Link>

@@ -10,7 +10,15 @@ import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
 import Head from "next/head";
 import { setBackground } from "@/helpers/variable_mapper";
 
-async function fetchWithTimeout(resource: RequestInfo, options: { timeout?: number, headers?: HeadersInit, method?: string, body?: string } = {}): Promise<Response> {
+async function fetchWithTimeout(
+  resource: RequestInfo,
+  options: {
+    timeout?: number;
+    headers?: HeadersInit;
+    method?: string;
+    body?: string;
+  } = {}
+): Promise<Response> {
   const { timeout = 30000 } = options;
 
   const controller = new AbortController();
@@ -18,13 +26,12 @@ async function fetchWithTimeout(resource: RequestInfo, options: { timeout?: numb
 
   const response = await fetch(resource, {
     ...options,
-    signal: controller.signal
+    signal: controller.signal,
   });
   clearTimeout(id);
 
   return response;
 }
-
 
 function Generate() {
   const router = useRouter();
@@ -44,11 +51,11 @@ function Generate() {
 
   // Set params
   const rekognitionParams = {
-    Attributes: ['ALL'],
+    Attributes: ["ALL"],
     Image: {
       S3Object: {
         Bucket: "gambaringue-user-images",
-        Name: `public/${key}`
+        Name: `public/${key}`,
       },
     },
   };
@@ -79,7 +86,8 @@ function Generate() {
           num_inference_steps: 90,
           guidance_scale: 7.5,
           num_images_per_prompt: 1,
-          negative_prompt: "ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face",
+          negative_prompt:
+            "ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face",
           batch_size: 2,
           strength: 0.7,
           scheduler: "KDPM2AncestralDiscreteScheduler",
@@ -92,7 +100,7 @@ function Generate() {
           method: "POST",
           headers: requestHeader,
           body: JSON.stringify(requestBody),
-        },
+        }
       );
       // Handle the response
       if (response.ok) {
@@ -110,7 +118,7 @@ function Generate() {
         setImage(s3Image);
         setUrl(img_url);
         setLoading(false);
-        setSuccess(true); 
+        setSuccess(true);
       } else {
         console.error("API request failed with status:", response.status);
         setLoading(false);
@@ -120,8 +128,7 @@ function Generate() {
       console.error("API request failed with error:", error);
       setLoading(false);
       setSuccess(false);
-    }   
-    
+    }
   };
 
   const detect_face_and_generate = async () => {
@@ -129,10 +136,14 @@ function Generate() {
       console.log(key);
       const response = await rekogClient.send(
         new DetectFacesCommand(rekognitionParams)
-      )
+      );
       console.log("Detecting face...");
-      if (response && response.FaceDetails !== undefined && response.FaceDetails.length > 0) {
-        console.log(response)
+      if (
+        response &&
+        response.FaceDetails !== undefined &&
+        response.FaceDetails.length > 0
+      ) {
+        console.log(response);
         // Accessing specific attributes
         const faceDetails = response.FaceDetails[0];
         const ageRange = faceDetails.AgeRange;
@@ -147,7 +158,7 @@ function Generate() {
 
         // Calculate the mean of the age range
         const age = ageRange?.High;
-        const hasBeard = beard?.Value ? 'beard' : 'no beard'
+        const hasBeard = beard?.Value ? "beard" : "no beard";
         // Find the first value of emotion
         const dominantEmotion = emotions?.[0].Type?.toLowerCase();
         // randomizer for every type of emotions (array)
@@ -155,38 +166,41 @@ function Generate() {
         const background = setBackground(dominantEmotion);
 
         // Determine if the person wears eyeglasses
-        const wearsEyeglasses = eyeglasses?.Value ? 'eyeglassess' : 'no eyeglasses';
+        const wearsEyeglasses = eyeglasses?.Value
+          ? "eyeglassess"
+          : "no eyeglasses";
 
         // Get the gender of the person
         const personGender = gender?.Value;
 
         // Determine if the person is smiling
-        const isSmiling = smile?.Value ? 'smiling' : 'not smiling';
-        
+        const isSmiling = smile?.Value ? "smiling" : "not smiling";
+
         // Determine if the person has their mouth open
-        const hasMouthOpen = mouthOpen?.Value ? 'mouth open' : 'mouth closed';
+        const hasMouthOpen = mouthOpen?.Value ? "mouth open" : "mouth closed";
 
         // Determine if the person uses sunglasses
-        const usesSunglasses = sunglasses?.Value ? 'using sunglasses' : 'not using sunglasses';
+        const usesSunglasses = sunglasses?.Value
+          ? "using sunglasses"
+          : "not using sunglasses";
 
-        const hasMustache = mustache?.Value ? 'has mustache' : 'no mustache';
+        const hasMustache = mustache?.Value ? "has mustache" : "no mustache";
 
         // Generate the prompt
-        const rekognitionPrompt = `caricature style, drawing, high resolution, funny, ultra realistic, background of ${background}, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`
-        
+        const rekognitionPrompt = `caricature style, drawing, portrait, high resolution, funny, background of ${background}, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`;
+
         // call generate function
         // console.log(`Generating image with prompt: ${rekognitionPrompt}`)
         generateImage(rekognitionPrompt);
       } else {
         console.log("No face detected");
-        generateImage("make a crazy image out of this")
+        generateImage("make a crazy image out of this");
         // handle case when face not detected
       }
     } catch (err) {
       console.log("Error", err);
     }
   };
-
 
   const handleRegenerate = async () => {
     setLoading(true);
@@ -205,51 +219,53 @@ function Generate() {
 
   return (
     <>
-    <Head>
-      <title>Generate Image</title>
-    </Head>
+      <Head>
+        <title>Generate Image</title>
+      </Head>
       {loading && !success ? (
-        <LoadingScreen />
+        <div className="items-center w-full h-screen justify-center">
+          <LoadingScreen loading_text="Generating image..." />
+        </div>
       ) : (
         <>
-        {success ? (
-        <div className="flex flex-col items-center w-full min-h-screen justify-center space-y-10 p-4">
-            <GeneratedImage image={image} imgUrl={url} />
-            <div className="flex flex-col lg:flex-row items-center justify-center ">
-              <button
-                className="items-center justify-center bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-                onClick={handleRegenerate}
-              >
-                Regenerate
-              </button>
-              <Link
-                href={url}
-                className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-              >
-                Download
-              </Link>
-              <Link
-                href="/photo"
-                className="items-center justify-center bg-black text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
-              >
-                Retake Photo
-              </Link>
-              
+          {success ? (
+            <div className="flex flex-col items-center w-full min-h-screen justify-center space-y-10 p-4">
+              <GeneratedImage image={image} imgUrl={url} />
+              <div className="flex flex-col lg:flex-row items-center justify-center ">
+                <button
+                  className="items-center justify-center bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+                  onClick={handleRegenerate}
+                >
+                  Regenerate
+                </button>
+                <Link
+                  href={url}
+                  className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+                >
+                  Download
+                </Link>
+                <Link
+                  href="/photo"
+                  className="items-center justify-center bg-black text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
+                >
+                  Retake Photo
+                </Link>
+              </div>
             </div>
-          </div>) : (
+          ) : (
             <div className="flex flex-col items-center w-full h-screen justify-center space-y-5">
-            <h1 className="text-2xl font-bold text-center">Failed to generate image</h1>
-            {/* show retake photo button */}
-            <Link
+              <h1 className="text-2xl font-bold text-center">
+                Failed to generate image
+              </h1>
+              {/* show retake photo button */}
+              <Link
                 href="/photo"
                 className="items-center justify-center bg-orange-500 text-white hover:bg-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
               >
                 Retake
               </Link>
-
             </div>
           )}
-          
         </>
       )}
     </>

@@ -8,12 +8,13 @@ const inter = Inter({ subsets: ["latin"] });
 export default function Home() {
   return (
     <>
-    <Head>
-      <title>Gambarin Gue Home</title>
-    </Head>
-      <div className="min-h-screen p-10 flex flex-col space-y-10 items-center justify-center py-2">
+      <Head>
+        <title>Gambarin Gue</title>
+      </Head>
+      <div className="min-h-screen p-5 flex flex-col space-y-10 items-center justify-center py-2">
+        <Image alt="Gambarin Gue" src="/home image.jpg" width={500} height={500} priority/>
         <h1 className="text-4xl lg:text-6xl font-bold text-center">
-          Welcome to Gambar<span className="text-orange-500">in</span> Gue!{" "}
+          Welcome to Gambar<span className="text-orange-500">.in</span> Gue!{" "}
         </h1>
         <Link
           href="/photo"
@@ -25,4 +26,4 @@ export default function Home() {
     </>
   );
 }
-``
+``;

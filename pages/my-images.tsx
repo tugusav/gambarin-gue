@@ -9,7 +9,7 @@ function MyImages() {
     <Head>
       <title>My Images</title>
     </Head>
-      <div className="items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-10 h-screen">
+      <div className="items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-10">
         <Authenticator>{({ signOut, user }) => <ImageGallery />}</Authenticator>
       </div>
     </>

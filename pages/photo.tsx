@@ -7,6 +7,7 @@ type WebcamPageProps = {};
 import { uploadImageToS3 } from "@/src/services/storage";
 import Router, { useRouter } from "next/router";
 import Head from "next/head";
+import LoadingScreen from "@/components/Loading";
 
 const WebcamPage: React.FC<WebcamPageProps> = () => {
   const router = useRouter();
@@ -38,8 +39,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
     try {
       setLoading(true);
       const img_key = await uploadImageToS3(capturedImage!);
-      console.log("S3 Image Key: ", img_key);
-      setLoading(false);
+      // console.log("S3 Image Key: ", img_key);
       // router.push(`/generate?key=${img_key}`);
       router.push(
         {
@@ -50,7 +50,6 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
       );
     } catch (error) {
       console.log(error);
-      setLoading(false);
     }
   };
 
@@ -75,14 +74,17 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
       <div>
         {loading ? (
           <div className="min-h-screen flex flex-col items-center justify-center py-2">
-            <h1 className="text-4xl lg:6xl font-bold text-center">Uploading Photo...</h1>
+            <LoadingScreen loading_text="Uploading photo..." />
           </div>
         ) : capturedImage ? (
-          <div className="flex flex-col space-y-5 h-screen items-center justify-center">
+          <div className="flex flex-col space-y-5 min-h-screen items-center justify-center">
+            <h1 className="text-4xl font-bold items-center justify-center text-center">
+              Ready to generate?
+            </h1>
             <Image
               src={URL.createObjectURL(capturedImage)}
               alt="Captured"
-              className="rounded-xl"
+              className="rounded-xl jus"
               width={640}
               height={640}
             />
@@ -97,12 +99,15 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
                 className="bg-orange-500 hover:bg-orange-700 text-white text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl shadow-md"
                 onClick={submitPhoto}
               >
-                Submit
+                Generate
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col space-y-5 min-h-screen items-center justify-center py-10 ">
+            <h1 className="text-4xl font-bold items-center justify-center text-center">
+              Take your photo!
+            </h1>
             <Webcam
               audio={false}
               mirrored={true}
