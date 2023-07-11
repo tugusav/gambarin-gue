@@ -7,7 +7,7 @@ function Footer() {
     // create footer that contains author
     <footer className="bg-gray-200">
       <div className="flex flex-col space-y-2 p-2">
-        <h1 className="text-m lg:text-l sm:text-s text-center text-gray-500 font-bold">2023 © Gambar.in Gue v1.1.2</h1>
+        <h1 className="text-m lg:text-l sm:text-s text-center text-gray-500 font-bold">2023 © Gambar.in Gue v1.1.3</h1>
         <h1 className="text-m lg:text-l sm:text-s text-center text-gray-500">Created by tugusav - icons by freepik & flaticons </h1>
         {/* include social media */}
         <div className="flex space-x-3 justify-center">

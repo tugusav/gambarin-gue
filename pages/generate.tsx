@@ -8,7 +8,9 @@ import Link from "next/link";
 import rekogClient from "../helpers/rekognition";
 import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
 import Head from "next/head";
-import { setBackground } from "@/helpers/variable_mapper";
+import { responseToPrompt } from "@/helpers/variable_mapper";
+import { withAuthenticator } from "@aws-amplify/ui-react";
+import { request } from "http";
 
 async function fetchWithTimeout(
   resource: RequestInfo,
@@ -41,10 +43,23 @@ function Generate() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("")
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await Auth.currentAuthenticatedUser();
+      // check if key is undefined from router query and user is logged in
+      if (!router.query.key || !user) {
+        router.replace("/");
+      }
+    };
+    checkAuth();
+  });
 
   useEffect(() => {
     // Get the image key from the router query when the component mounts
-    const { key } = router.query;
+    const { key, prompt } = router.query
+    setCustomPrompt(prompt as string);
     setImageKey(key as string);
     setLoading(true);
   }, [router.query]);
@@ -59,7 +74,7 @@ function Generate() {
       },
     },
   };
-  const generateImage = async (rekognitionPrompt: string) => {
+  const generateImage = async (rekognitionPrompt: string, customPrompt: string, negativePrompt: string) => {
     try {
       const user = await Auth.currentAuthenticatedUser();
       const token = user.signInUserSession.idToken.jwtToken;
@@ -82,18 +97,19 @@ function Generate() {
         },
         username: user["username"],
         parameters: {
-          prompt: rekognitionPrompt,
+          prompt: customPrompt.trim() !== "" ? `${customPrompt}, ${rekognitionPrompt}` : rekognitionPrompt,
           num_inference_steps: 90,
           guidance_scale: 7.5,
           num_images_per_prompt: 1,
           negative_prompt:
-            "ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face",
+            `ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face, ${negativePrompt}`,
           batch_size: 2,
           strength: 0.7,
-          scheduler: "KDPM2AncestralDiscreteScheduler",
+          scheduler: "DDIMScheduler",
         },
       };
       console.log("Fetching image...");
+      console.log(`Generating image with prompt: ${requestBody.parameters.prompt} \n and negative prompt: ${requestBody.parameters.negative_prompt}`)
       const response = await fetchWithTimeout(
         "https://pnn37l8e40.execute-api.us-east-1.amazonaws.com/dev/generate",
         {
@@ -146,55 +162,18 @@ function Generate() {
         console.log(response);
         // Accessing specific attributes
         const faceDetails = response.FaceDetails[0];
-        const ageRange = faceDetails.AgeRange;
-        const beard = faceDetails.Beard;
-        const emotions = faceDetails.Emotions;
-        const eyeglasses = faceDetails.Eyeglasses;
-        const gender = faceDetails.Gender;
-        const mustache = faceDetails.Mustache;
-        const mouthOpen = faceDetails.MouthOpen;
-        const smile = faceDetails.Smile;
-        const sunglasses = faceDetails.Sunglasses;
 
-        // Calculate the mean of the age range
-        const age = ageRange?.High;
-        const hasBeard = beard?.Value ? "beard" : "no beard";
-        // Find the first value of emotion
-        const dominantEmotion = emotions?.[0].Type?.toLowerCase();
-        // randomizer for every type of emotions (array)
-        // array define sendiri
-        const background = setBackground(dominantEmotion);
-
-        // Determine if the person wears eyeglasses
-        const wearsEyeglasses = eyeglasses?.Value
-          ? "eyeglassess"
-          : "no eyeglasses";
-
-        // Get the gender of the person
-        const personGender = gender?.Value;
-
-        // Determine if the person is smiling
-        const isSmiling = smile?.Value ? "smiling" : "not smiling";
-
-        // Determine if the person has their mouth open
-        const hasMouthOpen = mouthOpen?.Value ? "mouth open" : "mouth closed";
-
-        // Determine if the person uses sunglasses
-        const usesSunglasses = sunglasses?.Value
-          ? "using sunglasses"
-          : "not using sunglasses";
-
-        const hasMustache = mustache?.Value ? "has mustache" : "no mustache";
+        const {prompt, negative_prompt} = responseToPrompt(faceDetails);
+        
 
         // Generate the prompt
-        const rekognitionPrompt = `caricature style, drawing, portrait, high resolution, funny, background of ${background}, ${age} years old, ${personGender}, ${isSmiling}, ${hasMouthOpen}, ${wearsEyeglasses}, ${usesSunglasses}`;
-
+        const rekognitionPrompt = `cartoon, caricature, funny, detailed, exaggerated, ${prompt}`
+        
         // call generate function
-        // console.log(`Generating image with prompt: ${rekognitionPrompt}`)
-        generateImage(rekognitionPrompt);
+        generateImage(rekognitionPrompt, customPrompt, negative_prompt);
       } else {
         console.log("No face detected");
-        generateImage("make a crazy image out of this");
+        generateImage("make a crazy image out of this", '', '');
         // handle case when face not detected
       }
     } catch (err) {
@@ -272,4 +251,4 @@ function Generate() {
   );
 }
 
-export default Generate;
+export default withAuthenticator(Generate);

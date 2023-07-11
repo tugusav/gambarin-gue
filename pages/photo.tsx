@@ -1,13 +1,15 @@
-import { withAuthenticator } from "@aws-amplify/ui-react";
+import { Authenticator } from "@aws-amplify/ui-react";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import Image from "next/image";
 import { Auth } from "aws-amplify";
 type WebcamPageProps = {};
-import { uploadImageToS3 } from "@/src/services/storage";
+import { uploadImageToS3 } from "@/helpers/storage";
 import Router, { useRouter } from "next/router";
 import Head from "next/head";
 import LoadingScreen from "@/components/Loading";
+import PromptInput from "@/components/PromptInput";
+
 
 const WebcamPage: React.FC<WebcamPageProps> = () => {
   const router = useRouter();
@@ -15,6 +17,8 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
   const [capturedImage, setCapturedImage] = useState<Blob | null>(null);
   const user = Auth.currentAuthenticatedUser();
   const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState("");
+
 
   const capturePhoto = () => {
     const data = webcamRef.current?.getScreenshot();
@@ -44,13 +48,18 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
       router.push(
         {
           pathname: "/generate",
-          query: { key: img_key },
+          query: { key: img_key,
+          prompt: prompt},
         },
         "/generate"
       );
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handlePromptChange = (value: string) => {
+    setPrompt(value);
   };
 
   const dataURLtoBlob = (dataURL: string): Blob => {
@@ -71,6 +80,7 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
       <Head>
         <title>Take Photo</title>
       </Head>
+      <Authenticator>{({ signOut, user }) =>
       <div>
         {loading ? (
           <div className="min-h-screen flex flex-col items-center justify-center py-2">
@@ -88,6 +98,8 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
               width={640}
               height={640}
             />
+            <h1 className="font-bold text-xl text-gray-500">Add an additional prompt</h1>
+            <PromptInput onInputChange={handlePromptChange}/>
             <div className="flex sm:flex-col lg:flex-row items-center justify-center">
               <button
                 className="bg-gray-100 text-orange-500 hover:bg-gray-300 hover:text-orange-700 text-xl lg:text-2xl font-bold m-2 py-4 px-8 lg:py-10 lg:px-16 rounded-3xl"
@@ -124,8 +136,8 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
             </button>
           </div>
         )}
-      </div>
+      </div>}</Authenticator>
     </>
   );
 };
-export default withAuthenticator(WebcamPage);
+export default (WebcamPage);
