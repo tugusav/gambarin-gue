@@ -10,7 +10,6 @@ import { DetectFacesCommand } from "@aws-sdk/client-rekognition";
 import Head from "next/head";
 import { responseToPrompt } from "@/helpers/variable_mapper";
 import { withAuthenticator } from "@aws-amplify/ui-react";
-import { request } from "http";
 
 async function fetchWithTimeout(
   resource: RequestInfo,
@@ -43,7 +42,7 @@ function Generate() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState("")
+  const [customPrompt, setCustomPrompt] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -58,7 +57,7 @@ function Generate() {
 
   useEffect(() => {
     // Get the image key from the router query when the component mounts
-    const { key, prompt } = router.query
+    const { key, prompt } = router.query;
     setCustomPrompt(prompt as string);
     setImageKey(key as string);
     setLoading(true);
@@ -74,7 +73,11 @@ function Generate() {
       },
     },
   };
-  const generateImage = async (rekognitionPrompt: string, customPrompt: string, negativePrompt: string) => {
+  const generateImage = async (
+    rekognitionPrompt: string,
+    customPrompt: string,
+    negativePrompt: string
+  ) => {
     try {
       const user = await Auth.currentAuthenticatedUser();
       const token = user.signInUserSession.idToken.jwtToken;
@@ -97,19 +100,23 @@ function Generate() {
         },
         username: user["username"],
         parameters: {
-          prompt: customPrompt.trim() !== "" ? `${customPrompt}, ${rekognitionPrompt}` : rekognitionPrompt,
+          prompt:
+            customPrompt.trim() !== ""
+              ? `${customPrompt}, ${rekognitionPrompt}`
+              : rekognitionPrompt,
           num_inference_steps: 90,
           guidance_scale: 7.5,
           num_images_per_prompt: 1,
-          negative_prompt:
-            `ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face, ${negativePrompt}`,
+          negative_prompt: `ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face, ${negativePrompt}`,
           batch_size: 2,
           strength: 0.7,
           scheduler: "DDIMScheduler",
         },
       };
       console.log("Fetching image...");
-      console.log(`Generating image with prompt: ${requestBody.parameters.prompt} \n and negative prompt: ${requestBody.parameters.negative_prompt}`)
+      console.log(
+        `Generating image with prompt: ${requestBody.parameters.prompt} \n and negative prompt: ${requestBody.parameters.negative_prompt}`
+      );
       const response = await fetchWithTimeout(
         "https://pnn37l8e40.execute-api.us-east-1.amazonaws.com/dev/generate",
         {
@@ -163,17 +170,16 @@ function Generate() {
         // Accessing specific attributes
         const faceDetails = response.FaceDetails[0];
 
-        const {prompt, negative_prompt} = responseToPrompt(faceDetails);
-        
+        const { prompt, negative_prompt } = responseToPrompt(faceDetails);
 
         // Generate the prompt
-        const rekognitionPrompt = `cartoon, caricature, funny, detailed, exaggerated, ${prompt}`
-        
+        const rekognitionPrompt = `cartoon, caricature, funny, detailed, exaggerated, ${prompt}`;
+
         // call generate function
         generateImage(rekognitionPrompt, customPrompt, negative_prompt);
       } else {
         console.log("No face detected");
-        generateImage("make a crazy image out of this", '', '');
+        generateImage("make a crazy image out of this", "", "");
         // handle case when face not detected
       }
     } catch (err) {
