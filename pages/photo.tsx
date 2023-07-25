@@ -1,4 +1,4 @@
-import { Authenticator } from "@aws-amplify/ui-react";
+import { withAuthenticator } from "@aws-amplify/ui-react";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import Image from "next/image";
@@ -80,7 +80,6 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
       <Head>
         <title>Take Photo</title>
       </Head>
-      <Authenticator>{({ signOut, user }) =>
       <div>
         {loading ? (
           <div className="min-h-screen flex flex-col items-center justify-center py-2">
@@ -136,8 +135,8 @@ const WebcamPage: React.FC<WebcamPageProps> = () => {
             </button>
           </div>
         )}
-      </div>}</Authenticator>
+      </div>
     </>
   );
 };
-export default (WebcamPage);
+export default withAuthenticator(WebcamPage);

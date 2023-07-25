@@ -257,4 +257,4 @@ function Generate() {
   );
 }
 
-export default withAuthenticator(Generate);
+export default Generate;

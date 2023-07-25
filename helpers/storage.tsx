@@ -1,8 +1,5 @@
 import { Storage } from "aws-amplify";
-import { useState } from "react";
 import { Auth } from "aws-amplify";
-import AWS from 'aws-sdk';
-
 
 export const uploadImageToS3 = async (image: Blob) => {
   try {
