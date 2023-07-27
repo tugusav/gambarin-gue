@@ -110,7 +110,7 @@ function Generate() {
           negative_prompt: `ugly, not safe for work, bad anatomy, disfigured, pixelated, low quality, text, watermark, duplicate, poorly drawn face, ${negativePrompt}`,
           batch_size: 2,
           strength: 0.7,
-          scheduler: "DDIMScheduler",
+          scheduler: "KDPM2AncestralDiscreteScheduler",
         },
       };
       console.log("Fetching image...");
@@ -173,7 +173,7 @@ function Generate() {
         const { prompt, negative_prompt } = responseToPrompt(faceDetails);
 
         // Generate the prompt
-        const rekognitionPrompt = `cartoon, caricature, funny, detailed, exaggerated, ${prompt}`;
+        const rekognitionPrompt = `caricature style, drawing, realistic, funny, ${prompt}`;
 
         // call generate function
         generateImage(rekognitionPrompt, customPrompt, negative_prompt);
