@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SageMakerEndpointName:
+    Type: String
+    Description: Name of Sagemaker Endpoint (the one from the api_template cloudformation)
+    Default: sd-d2i-generator
+  ModelId:
+    Type: String
+    Description: Identifier of the model used for inference
+    Default: model-depth2img-stable-diffusion-2-depth-fp16
+  InstanceType:
+    Type: String
+    Description: Endpoint Instance Type
+    Default: ml.p3.8xlarge
+Resources:
+  SageMakerExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: SageMakerExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSageMakerFullAccess'
+
+  # Define your SageMaker endpoint configuration here, referencing the SageMaker model.
+  SageMakerModel:
+    Type: 'AWS::SageMaker::Model'
+    Properties:
+      ExecutionRoleArn: !GetAtt SageMakerExecutionRole.Arn
+      ModelName: !Ref ModelId
+      PrimaryContainer:
+        Image: '763104351884.dkr.ecr.us-east-1.amazonaws.com/djl-inference:0.21.0-deepspeed0.8.3-cu117'
+        ModelDataUrl: 's3://jumpstart-cache-prod-us-east-1/stabilityai-infer/prepack/v1.0.0/infer-prepack-model-depth2img-stable-diffusion-2-depth-fp16.tar.gz'
+    
+  SageMakerEndpointConfig:
+    Type: AWS::SageMaker::EndpointConfig
+    Properties:
+      ProductionVariants:
+        - VariantName: "AllTraffic"
+          ModelName: !GetAtt SageMakerModel.ModelName
+          InstanceType: !Ref InstanceType
+          InitialInstanceCount: 1
+          InitialVariantWeight: 1.0  
+          
+  SageMakerEndpoint:
+    Type: AWS::SageMaker::Endpoint
+    Properties:
+      EndpointName: !Ref SageMakerEndpointName
+      EndpointConfigName: !GetAtt SageMakerEndpointConfig.EndpointConfigName
+
+Outputs:
+  EndpointId:
+    Value: !Ref SageMakerEndpoint
+  EndpointName:
+    Value: !GetAtt SageMakerEndpoint.EndpointName

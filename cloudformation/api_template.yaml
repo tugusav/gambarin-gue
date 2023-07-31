@@ -1,0 +1,271 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Region:
+    Type: String
+    Description: AWS Region where the resources will be created (note that this must be the same as the SageMaker Endpoint Region)
+    Default: us-east-1
+  BucketName1:
+    Type: String
+    Description: Name of the first S3 bucket (please dont change)
+    Default: gg-user
+  BucketName2:
+    Type: String
+    Description: Name of the second S3 bucket (please dont change)
+    Default: gg-generated
+  APIGatewayName:
+    Type: String
+    Description: Name of API Gateway
+    Default: gg-api
+  SageMakerEndpointName:
+    Type: String
+    Description: Name of Sagemaker Endpoint (custom, will be used later in other cloudformation template)
+    Default: sd-d2i-generator
+
+  
+Resources:
+  Bucket1:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BucketName1
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - "*"
+          AllowedMethods:
+          - GET
+          - HEAD
+          - PUT
+          - POST
+          - DELETE
+          AllowedOrigins:
+          - "*"
+          ExposedHeaders:
+          - x-amz-server-side-encryption
+          - x-amz-request-id
+          - x-amz-id-2
+          - ETag
+          Id: S3CORSRuleId1
+          MaxAge: 3000
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  Bucket2:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BucketName2
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - "*"
+          AllowedMethods:
+          - GET
+          - HEAD
+          - PUT
+          - POST
+          - DELETE
+          AllowedOrigins:
+          - "*"
+          ExposedHeaders:
+          - x-amz-server-side-encryption
+          - x-amz-request-id
+          - x-amz-id-2
+          - ETag
+          Id: S3CORSRuleId2
+          MaxAge: 3000
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: LambdaSagemakerInvoker
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:PutLogEvents'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:PutObject'
+                Resource:
+                  - 'arn:aws:logs:*:*:*'
+                  - Fn::Sub: 'arn:aws:s3:::${BucketName1}/*'
+                  - Fn::Sub: 'arn:aws:s3:::${BucketName1}'
+                  - Fn::Sub: 'arn:aws:s3:::${BucketName2}/*'
+                  - Fn::Sub: 'arn:aws:s3:::${BucketName2}'
+        - PolicyName: SageMakerInvokerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 'sagemaker:InvokeEndpoint'
+                Resource: '*'
+
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: SagemakerInvokerLambda
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          ENDPOINT_NAME: !Ref SageMakerEndpointName
+          TARGET_BUCKET: !Ref BucketName2
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          from io import BytesIO
+          import base64
+          import os
+          from subprocess import call
+          import time
+
+          ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
+          s3_client = boto3.client('s3')
+          runtime= boto3.client('runtime.sagemaker')
+
+          # create lambda function that reads s3 bucket and invoke a sagemaker endpoint
+
+
+          def encode_image(image_path):
+              with open(image_path, "rb") as f:
+                  image_bytes = f.read()
+              encoded_image = base64.b64encode(bytearray(image_bytes)).decode()
+              return encoded_image
+
+          def lambda_handler(event, context):
+              # get image from s3 bucket
+              event_body = json.loads(event['body'])
+              bucket = event_body['s3']['bucket']['name']
+              target_bucket = os.environ['TARGET_BUCKET']
+              s3_file_path = event_body['s3']['object']['key']
+              download_path = f"/tmp/{event_body['s3']['object']['filename']}"
+              key = f"public/{s3_file_path}"
+              # download file
+              s3_client.download_file(bucket, key, download_path)
+              
+              # invoke endpoint    
+              encoded_image = encode_image(download_path)
+              payload = event_body['parameters'].copy()
+              payload['image'] = encoded_image
+              payload = json.dumps(payload).encode('utf-8')
+              
+              response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
+                                                ContentType='application/json',
+                                                Accept='application/json',
+                                                Body=payload)
+              
+              # get response from endpoint
+              response_body = response['Body']
+              response_str = response_body.read().decode('utf-8')
+              response_dict = json.loads(response_str)
+              generated_image = response_dict["generated_images"][0]
+              
+              # save image to tmp folder
+              target_filename = f"{event_body['s3']['object']['filename']}"
+              timestr = time.strftime("%Y%m%d-%H%M%S")
+              target_key = f"public/{event_body['username']}/generated_{timestr}_{target_filename}"
+              local_image_path = f'/tmp/generated_{target_filename}'
+              decoded_image_data = base64.b64decode(generated_image)
+              
+              # save to /tmp folder
+              with open(local_image_path, 'wb') as file:
+                  file.write(decoded_image_data)
+
+              # put image in target s3 bucket
+              s3_client.upload_file(local_image_path, target_bucket, target_key)
+              
+              image_url = s3_client.generate_presigned_url('get_object',
+                                                          Params={'Bucket': target_bucket,
+                                                                      'Key': target_key},
+                                                          ExpiresIn=900)
+              
+              # delete tmp folder
+              call('rm -rf /tmp/*', shell=True)
+              return {
+              'statusCode': 200,
+              'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*'
+              },
+              'body': json.dumps({
+                  'bucket': target_bucket,
+                  'key': target_key,
+                  'url': image_url
+              }),
+              'isBase64Encoded': False 
+            
+          }
+  ApiGatewayRestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: GenerateImageAPI
+
+  ApiGatewayResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: 'generate'
+
+  ApiGatewayMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: 'POST'
+      AuthorizationType: 'NONE'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri: !Join
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - ':lambda:path/2015-03-31/functions/'
+            - !GetAtt LambdaFunction.Arn
+            - '/invocations'
+      MethodResponses:
+      - ResponseParameters:
+          'method.response.header.Access-Control-Allow-Origin': "'*'"
+        StatusCode: '200'
+
+  ApiGatewayDeployment:
+    DependsOn: ApiGatewayMethod
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      Description: API deployment
+      StageName: dev
+
+Outputs:
+  LambdaFunctionArn:
+    Value: !GetAtt LambdaFunction.Arn
+  Bucket1Name:
+    Value: !Ref BucketName1
+  Bucket2Name:
+    Value: !Ref BucketName2
