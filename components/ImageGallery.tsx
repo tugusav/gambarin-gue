@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -7,13 +8,14 @@ import { Auth, Storage } from "aws-amplify";
 export default function ImageGallery() {
   const [imageKeys, setImageKeys] = useState<S3ProviderListOutputItem[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const s3_target_bucket = process.env.NEXT_PUBLIC_S3_TARGET_BUCKET
 
   const fetchImages = async () => {
     const user = await Auth.currentAuthenticatedUser();
     const key = `${user["username"]}/`;
     // console.log(key);
     const { results } = await Storage.list(key, {
-      bucket: "gambaringue-generated-images",
+      bucket: s3_target_bucket,
     });
     // console.log(results);
     setImageKeys(results);
@@ -21,7 +23,7 @@ export default function ImageGallery() {
       results.slice(0).reverse().map(
         async (image) =>
           await Storage.get(image.key!, {
-            bucket: "gambaringue-generated-images",
+            bucket: s3_target_bucket,
           })
       )
     );

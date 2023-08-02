@@ -6,10 +6,11 @@ export const uploadImageToS3 = async (image: Blob) => {
     // put the image in the user's folder in S3
     const user = await Auth.currentAuthenticatedUser();
     const key = `${user['username']}/${image.name}`;
+    const s3_user_bucket = process.env.NEXT_PUBLIC_S3_USER_BUCKET
 
     // upload the image to s3 bucket
     const return_val = await Storage.put(key, image, {
-      bucket: "gambaringue-user-images",
+      bucket: s3_user_bucket,
       level: "public",
       contentType: "image/jpeg",
     });

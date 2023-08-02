@@ -43,6 +43,8 @@ function Generate() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const s3_user_bucket = process.env.NEXT_PUBLIC_S3_USER_BUCKET;
+  const s3_target_bucket = process.env.NEXT_PUBLIC_S3_TARGET_BUCKET;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -68,7 +70,7 @@ function Generate() {
     Attributes: ["ALL"],
     Image: {
       S3Object: {
-        Bucket: "gambaringue-user-images",
+        Bucket: s3_user_bucket,
         Name: `public/${key}`,
       },
     },
@@ -90,13 +92,13 @@ function Generate() {
       const requestBody = {
         s3: {
           bucket: {
-            name: "gambaringue-user-images",
+            name: s3_user_bucket,
           },
           object: {
             filename: key.split("/")[1],
             key: key,
           },
-          arn: "arn:aws:s3:::gambaringue-user-images",
+          arn: `arn:aws:s3:::${s3_user_bucket}`,
         },
         username: user["username"],
         parameters: {
@@ -117,8 +119,13 @@ function Generate() {
       console.log(
         `Generating image with prompt: ${requestBody.parameters.prompt} \n and negative prompt: ${requestBody.parameters.negative_prompt}`
       );
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      if (!apiUrl){
+        throw new Error("API_URL not defined in environment variables")
+      }
       const response = await fetchWithTimeout(
-        "https://pnn37l8e40.execute-api.us-east-1.amazonaws.com/dev/generate",
+        apiUrl + "/generate",
+        // "https://uees3cxso9.execute-api.us-east-1.amazonaws.com/dev/generate",
         {
           method: "POST",
           headers: requestHeader,
@@ -136,7 +143,7 @@ function Generate() {
 
         // download s3 image from response
         const s3Image = await Storage.get(img_key!, {
-          bucket: "gambaringue-generated-images",
+          bucket: s3_target_bucket,
         });
         setImage(s3Image);
         setUrl(img_url);
