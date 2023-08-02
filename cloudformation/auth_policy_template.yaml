@@ -1,0 +1,73 @@
+Description: Auth Policy for AWS services
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  GGS3Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+            Resource:
+              - "arn:aws:s3:::gg-user/public/*"
+              - "arn:aws:s3:::gg-user/protected/${cognito-identity.amazonaws.com:sub}/*"
+              - "arn:aws:s3:::gg-user/private/${cognito-identity.amazonaws.com:sub}/*"
+              - "arn:aws:s3:::gg-generated/public/*"
+              - "arn:aws:s3:::gg-generated/protected/${cognito-identity.amazonaws.com:sub}/*"
+              - "arn:aws:s3:::gg-generated/private/${cognito-identity.amazonaws.com:sub}/*"
+            Effect: Allow
+          - Action:
+              - "s3:PutObject"
+            Resource:
+              - "arn:aws:s3:::gg-user/uploads/*"
+            Effect: Allow
+          - Action:
+              - "s3:GetObject"
+            Resource:
+              - "arn:aws:s3:::gg-user/protected/*"
+              - "arn:aws:s3:::gg-generated/protected/*"
+            Effect: Allow
+          - Condition:
+              StringLike:
+                "s3:prefix":
+                  - "public/"
+                  - "public/*"
+                  - "protected/"
+                  - "protected/*"
+                  - "private/${cognito-identity.amazonaws.com:sub}/"
+                  - "private/${cognito-identity.amazonaws.com:sub}/*"
+            Action:
+              - "s3:ListBucket"
+            Resource:
+              - "arn:aws:s3:::gg-user"
+              - "arn:aws:s3:::gg-generated"
+            Effect: Allow
+
+            Effect: Allow
+      ManagedPolicyName: gg-s3-policy
+
+  RekognitionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyName: RekognitionPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "rekognition:*"
+            Resource: "*"
+            Effect: Allow
+            Sid: RekognitionPolicy
+      ManagedPolicyName: gg-rekog-policy
+
+Outputs:
+  ggS3PolicyArn:
+    Description: ARN of the GGS3Policy managed policy
+    Value: !Ref GGS3Policy
+
+  ggrekogPolicyArn:
+    Description: ARN of the RekognitionPolicy managed policy
+    Value: !Ref RekognitionPolicy
