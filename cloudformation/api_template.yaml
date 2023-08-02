@@ -134,6 +134,7 @@ Resources:
         Variables:
           ENDPOINT_NAME: !Ref SageMakerEndpointName
           TARGET_BUCKET: !Ref BucketName2
+      Timeout: 60
       Code:
         ZipFile: |
           import boto3
@@ -232,7 +233,7 @@ Resources:
       ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
       PathPart: 'generate'
 
-  ApiGatewayMethod:
+    ApiGatewayMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       RestApiId: !Ref ApiGatewayRestApi
@@ -250,9 +251,42 @@ Resources:
             - !GetAtt LambdaFunction.Arn
             - '/invocations'
       MethodResponses:
-      - ResponseParameters:
-          'method.response.header.Access-Control-Allow-Origin': "'*'"
-        StatusCode: '200'
+        - ResponseParameters:
+            'method.response.header.Access-Control-Allow-Origin': "'*'"
+          StatusCode: '200'
+  
+  # Add a separate ApiGatewayMethod for handling OPTIONS preflight requests
+  ApiGatewayMethodOptions:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: 'OPTIONS'
+      AuthorizationType: 'NONE'
+      Integration:
+        Type: 'MOCK'
+        IntegrationResponses:
+          - StatusCode: '200'
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Methods': "'POST'"
+              'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              'method.response.header.Access-Control-Allow-Origin': "'*'"
+        PassthroughBehavior: 'WHEN_NO_MATCH'
+        RequestTemplates:
+          'application/json': '{"statusCode": 200}'
+      MethodResponses:
+        - ResponseParameters:
+            'method.response.header.Access-Control-Allow-Methods': "'POST'"
+            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+            'method.response.header.Access-Control-Allow-Origin': "'*'"
+          StatusCode: '200'
+  LambdaPermissionForApiGateway:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*/*"
 
   ApiGatewayDeployment:
     DependsOn: ApiGatewayMethod
