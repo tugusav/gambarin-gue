@@ -52,7 +52,6 @@ Resources:
   RekognitionPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: RekognitionPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
